@@ -1,23 +1,23 @@
-from typing import Dict, List
-
 from aiogoogle import Aiogoogle
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 
 from app.core.db import get_async_session
 from app.core.google_client import get_service
 from app.core.user import current_superuser
-from app.crud import charity_project_crud as crud
-from app.services.google_api import (set_user_permissions, spreadsheets_create,
-                                     spreadsheets_update_value)
+from app.crud import charity_project_crud
+from app.schemas import GoogleApiReport
+from app.services.google_api import (spreadsheets_create,
+                                     spreadsheets_update_value,
+                                     set_user_permissions)
 
 router = APIRouter()
-_ = list()   # для тестов
 
 
 @router.get(
     '/',
-    response_model=List[Dict[str, str]],
+    response_model=List[GoogleApiReport],
     dependencies=[Depends(current_superuser)],
 )
 async def get_report(
@@ -30,12 +30,10 @@ async def get_report(
     отсортированные по скорости сбора средств — от тех, что закрылись быстрее
     всего, до тех, что долго собирали нужную сумму.
     """
-    _ = list()  # для тестов
-    projects = await crud.get_projects_by_completion_rate(session)
-
+    projects = await charity_project_crud.get_projects_by_completion_rate(session)
     spreadsheetid = await spreadsheets_create(wrapper_services)
     await set_user_permissions(spreadsheetid, wrapper_services)
-    await spreadsheets_update_value(spreadsheetid,
-                                    projects,
-                                    wrapper_services)
-    return projects
+    report_data = await spreadsheets_update_value(spreadsheetid,
+                                                  projects,
+                                                  wrapper_services)
+    return report_data

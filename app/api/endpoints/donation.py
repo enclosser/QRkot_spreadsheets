@@ -1,13 +1,14 @@
-from typing import List
-
 from fastapi import APIRouter, Depends
+
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 
 from app.api.services import make_investment
 from app.core.db import get_async_session
-from app.core.user import current_superuser, current_user
+from app.core.user import current_user, current_superuser
 from app.crud import donation_crud
 from app.schemas import DonationCreate, DonationDB, UserDB
+
 
 router = APIRouter()
 
@@ -40,7 +41,7 @@ async def create_new_donation(
     dependencies=[Depends(current_superuser)]
 
 )
-async def get_all_donation(
+async def get_all_donations(
         session: AsyncSession = Depends(get_async_session),
 ):
     """Только для суперюзеров."""

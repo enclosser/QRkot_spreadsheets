@@ -1,29 +1,10 @@
-from typing import Dict, List, Optional
-
-from sqlalchemy import extract, select
+from sqlalchemy import select, extract
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
 
 from app.crud import CRUDBase
 from app.models import CharityProject
-
-
-class CRUDMeetingRoom():    # для тестов
-    async def get_projects_by_completion_rate(
-            self,
-            session: AsyncSession
-    ) -> List[Dict[str, str]]:
-        projects = await session.execute(
-            select(
-                CharityProject).where(
-                CharityProject.fully_invested).order_by(
-                extract('year', CharityProject.close_date) - extract(
-                    'year', CharityProject.create_date),
-                extract('month', CharityProject.close_date) - extract(
-                    'month', CharityProject.create_date),
-                extract('day', CharityProject.close_date) - extract(
-                    'day', CharityProject.create_date),
-            ))
-        return projects
+from app.schemas import CharityProjectDB
 
 
 class CRUDCharityProject(CRUDBase):
@@ -44,31 +25,21 @@ class CRUDCharityProject(CRUDBase):
     async def get_projects_by_completion_rate(
             self,
             session: AsyncSession
-    ) -> List[Dict[str, str]]:
-        response_list = []
+    ) -> List[CharityProjectDB]:
         projects = await session.execute(
             select(
                 CharityProject).where(
                 CharityProject.fully_invested).order_by(
-                extract('year', CharityProject.close_date) - extract(
-                    'year', CharityProject.create_date),
-                extract('month', CharityProject.close_date) - extract(
-                    'month', CharityProject.create_date),
-                extract('day', CharityProject.close_date) - extract(
-                    'day', CharityProject.create_date),
-            ))
-        projects = projects.scalars().all()
-        for project in projects:
-            response_list.append(
-                {
-                    "name": project.name,
-                    "collection_time": str(
-                        project.close_date - project.create_date
-                    ),
-                    "description": project.description
-                }
+                    extract('year', CharityProject.close_date) -
+                    extract('year', CharityProject.create_date),
+                    extract('month', CharityProject.close_date) -
+                    extract('month', CharityProject.create_date),
+                    extract('day', CharityProject.close_date) -
+                    extract('day', CharityProject.create_date)
             )
-        return response_list
+        )
+        projects = projects.scalars().all()
+        return projects
 
 
 charity_project_crud = CRUDCharityProject(CharityProject)

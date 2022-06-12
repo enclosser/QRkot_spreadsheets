@@ -1,8 +1,10 @@
 import logging
+
 from logging.handlers import RotatingFileHandler
 
+
 LOG_FORMAT = '%(asctime)s, %(levelname)s, %(message)s, %(name)s'
-FILENAME = 'aplication.log'
+FILENAME = 'app.log'
 
 
 logging.basicConfig(format=LOG_FORMAT)

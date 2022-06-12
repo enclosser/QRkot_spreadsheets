@@ -1,18 +1,20 @@
-from typing import Optional, Union
-
 from fastapi import Depends, Request
-from fastapi_users import (BaseUserManager, FastAPIUsers,
-                           InvalidPasswordException)
-from fastapi_users.authentication import (AuthenticationBackend,
-                                          BearerTransport, JWTStrategy)
+from fastapi_users import (
+    BaseUserManager, FastAPIUsers, InvalidPasswordException
+)
+from fastapi_users.authentication import (
+    AuthenticationBackend, BearerTransport, JWTStrategy
+)
 from fastapi_users_db_sqlalchemy import SQLAlchemyUserDatabase
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Union, Optional
 
 from app.core.config import settings
 from app.core.db import get_async_session
 from app.core.logging import logger
 from app.models import UserTable
 from app.schemas import User, UserCreate, UserDB, UserUpdate
+
 
 USER_CREATE_MSG = 'Пользователь {username} был зарегистрирован'
 

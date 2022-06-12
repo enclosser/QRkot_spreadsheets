@@ -1,9 +1,10 @@
+from aiogoogle import Aiogoogle
 from datetime import datetime
 from typing import List
 
-from aiogoogle import Aiogoogle
-
 from app.core.config import settings
+from app.schemas import CharityProjectDB, GoogleApiReport
+
 
 FORMAT = "%Y/%m/%d %H:%M:%S"
 
@@ -45,9 +46,20 @@ async def set_user_permissions(
 
 async def spreadsheets_update_value(
         spreadsheetid: str,
-        projects: List,
+        projects: List[CharityProjectDB],
         wrapper_services: Aiogoogle
-) -> None:
+) -> List[GoogleApiReport]:
+    projects_data = []
+    for project in projects:
+        projects_data.append(
+            {
+                "name": project.name,
+                "collection_time": str(
+                    project.close_date - project.create_date
+                ),
+                "description": project.description
+            }
+        )
     now_date_time = datetime.now().strftime(FORMAT)
     service = await wrapper_services.discover('sheets', 'v4')
     table_values = [
@@ -55,11 +67,11 @@ async def spreadsheets_update_value(
         ['Топ проектов по скорости закрытия'],
         ['Название проекта', 'Время сбора', 'Описание']
     ]
-    for project in projects:
+    for data in projects_data:
         new_row = [
-            str(project['name']),
-            str(project['collection_time']),
-            str(project['description'])
+            str(data['name']),
+            str(data['collection_time']),
+            str(data['description'])
         ]
         table_values.append(new_row)
 
@@ -67,7 +79,7 @@ async def spreadsheets_update_value(
         'majorDimension': 'ROWS',
         'values': table_values
     }
-    response = await wrapper_services.as_service_account(
+    await wrapper_services.as_service_account(
         service.spreadsheets.values.update(
             spreadsheetId=spreadsheetid,
             range='A1:E30',
@@ -75,4 +87,4 @@ async def spreadsheets_update_value(
             json=update_body
         )
     )
-    return response
+    return projects_data
